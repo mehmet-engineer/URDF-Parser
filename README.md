@@ -1,5 +1,5 @@
 # URDF-Parser
-URDF Parser Python Class without and extra dependency.
+URDF Parser and loader Python Class without any extra dependency.
 
 **Author: Mehmet KAHRAMAN | Date: 19.11.2024 | Last Update: 19.11.2024**
 

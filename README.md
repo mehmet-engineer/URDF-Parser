@@ -16,7 +16,7 @@ Requirements
 Run Example Script
 ---
 ```
-python3 urdf_load_example.py
+python3 scripts/urdf_load_example.py
 ```
 
 Example API Usage

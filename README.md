@@ -3,10 +3,6 @@ URDF Parser and loader Python Class without any extra dependency.
 
 **Author: Mehmet KAHRAMAN | Date: 19.11.2024 | Last Update: 25.11.2024**
 
-Assumptions
----
-- Joint axis elements must be one of -1, 0, 1 numbers.
-- Transforms are calculated from joint xyz and rpy. Visual origin of link are neglected. 
 
 Requirements
 ---

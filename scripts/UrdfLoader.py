@@ -30,15 +30,17 @@ class Link:
         self.name = ""
         self.mass = 0.0
         
-        self.origin_xyz = [0.0, 0.0, 0.0]
-        self.origin_rpy = [0.0, 0.0, 0.0]
+        self.inertial_origin_xyz = [0.0, 0.0, 0.0]
+        self.inertial_origin_rpy = [0.0, 0.0, 0.0]
         
-        self.mesh_path = ""
-        self.mesh_color = [0.0, 0.0, 0.0]
-        
-        self.has_inertia = False
         self.inertia = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         # inertia --> [Ixx, Ixy, Ixz, Iyy, Izz, Iyz]
+        
+        self.mesh_path = ""
+        self.mesh_color = [1.0, 1.0, 1.0]
+        
+        self.visual_origin_xyz = [0.0, 0.0, 0.0]
+        self.visual_origin_rpy = [0.0, 0.0, 0.0]
 
 
 class UrdfLoader:
@@ -138,12 +140,10 @@ class UrdfLoader:
             
             inertial = link.find("inertial")
             if inertial is not None:
-                link_data.has_inertia = True
-                
                 inertial_origin = inertial.find("origin")
                 if inertial_origin is not None:
-                    link_data.origin_xyz = self.string_to_floats(inertial_origin.attrib.get("xyz"))
-                    link_data.origin_rpy = self.string_to_floats(inertial_origin.attrib.get("rpy"))
+                    link_data.inertial_origin_xyz = self.string_to_floats(inertial_origin.attrib.get("xyz"))
+                    link_data.inertial_origin_rpy = self.string_to_floats(inertial_origin.attrib.get("rpy"))
                 else:
                     raise ValueError("No origin found in link: " + link_data.name)
                 
@@ -166,18 +166,30 @@ class UrdfLoader:
             
             else:
                 link_data.mass = 0.0
-                link_data.origin_xyz = [0.0, 0.0, 0.0]
-                link_data.origin_rpy = [0.0, 0.0, 0.0]
+                link_data.inertial_origin_xyz = [0.0, 0.0, 0.0]
+                link_data.inertial_origin_rpy = [0.0, 0.0, 0.0]
                 link_data.inertia = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                link_data.has_inertia = False
             
             visual = link.find("visual")
             if visual is not None:
+                if visual.find("origin") is not None:
+                    link_data.visual_origin_xyz = self.string_to_floats(visual.find("origin").attrib.get("xyz"))
+                    link_data.visual_origin_rpy = self.string_to_floats(visual.find("origin").attrib.get("rpy"))
+                else:
+                    link_data.visual_origin_xyz = [0.0, 0.0, 0.0]
+                    link_data.visual_origin_rpy = [0.0, 0.0, 0.0]
+                                    
                 link_data.mesh_path = visual.find("geometry").find("mesh").attrib.get("filename")
-                link_data.mesh_color = self.string_to_floats(visual.find("material").find("color").attrib.get("rgba"))[:3]
+                
+                if (visual.find("material") is not None) and (visual.find("material").find("color") is not None):
+                    link_data.mesh_color = self.string_to_floats(visual.find("material").find("color").attrib.get("rgba"))[:3]
+                else:
+                    link_data.mesh_color = [1.0, 1.0, 1.0]
             else:
                 link_data.mesh_path = ""
-                link_data.mesh_color = [0.0, 0.0, 0.0]
+                link_data.mesh_color = [1.0, 1.0, 1.0]
+                link_data.visual_origin_xyz = [0.0, 0.0, 0.0]
+                link_data.visual_origin_rpy = [0.0, 0.0, 0.0]
             
             self.links.append(link_data)
 
@@ -287,6 +299,12 @@ class UrdfLoader:
 
     def get_urdf_path(self):
         return self.urdf_path
+    
+    def get_joint_of_link(self, link_name):
+        for joint in self.joints:
+            if joint.child == link_name:
+                return joint
+        raise ValueError("Could not find joint of link: " + link_name + " !")
     
     def get_total_num_joints(self):
         return len(self.joints)
